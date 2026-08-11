@@ -1,7 +1,7 @@
-import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.1';
-import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.1';
-import { state } from '../core/state.js?v=2.1.1';
-import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.1';
+import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.2';
+import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.2';
+import { state } from '../core/state.js?v=2.1.2';
+import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.2';
 import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut,

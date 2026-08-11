@@ -1,8 +1,8 @@
-import { listProducts, listCustomers, createSale } from '../services/data-service.js?v=2.1.1';
-import { state } from '../core/state.js?v=2.1.1';
-import { PAYMENT_METHODS } from '../core/constants.js?v=2.1.1';
-import { formatRupiah, formatNumber, normalizeText, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
-import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
+import { listProducts, listCustomers, createSale } from '../services/data-service.js?v=2.1.2';
+import { state } from '../core/state.js?v=2.1.2';
+import { PAYMENT_METHODS } from '../core/constants.js?v=2.1.2';
+import { formatRupiah, formatNumber, normalizeText, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.2';
+import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.2';
 
 let catalog = [];
 let customers = [];

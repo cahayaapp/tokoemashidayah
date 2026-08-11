@@ -1,8 +1,8 @@
-import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.1';
-import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.1';
-import { canManage } from '../core/state.js?v=2.1.1';
-import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
-import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
+import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.2';
+import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.2';
+import { canManage } from '../core/state.js?v=2.1.2';
+import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.2';
+import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.2';
 
 let products = [];
 let filtered = [];
@@ -70,8 +70,13 @@ function photoEditor(product) {
     <div class="firebase-photo-editor">
       <div class="firebase-photo-preview" id="product-image-preview">${hasImage ? `<img src="${product.imageUrl}" alt="Foto produk saat ini">` : '<span>Belum ada foto</span>'}</div>
       <div class="firebase-photo-controls">
-        <input type="file" id="product-image" accept="image/*" capture="environment">
-        <small>Foto otomatis dikompresi lalu disimpan langsung di <strong>Firebase Firestore</strong>. Cloud Storage tidak diperlukan.</small>
+        <div class="firebase-photo-actions">
+          <label class="button button--gold firebase-photo-button" for="product-image-gallery">▣ Pilih dari Galeri</label>
+          <label class="button button--outline firebase-photo-button" for="product-image-camera">◎ Ambil Foto</label>
+        </div>
+        <input class="firebase-photo-file-input" type="file" id="product-image-gallery" accept="image/*">
+        <input class="firebase-photo-file-input" type="file" id="product-image-camera" accept="image/*" capture="environment">
+        <small>Di HP, gunakan <strong>Pilih dari Galeri</strong> untuk mengambil foto yang sudah tersimpan, atau <strong>Ambil Foto</strong> untuk membuka kamera. Foto otomatis dikompresi lalu disimpan langsung di <strong>Firebase Firestore</strong>.</small>
         ${hasImage ? '<label class="firebase-photo-remove"><input type="checkbox" id="remove-product-image"> Hapus foto saat produk disimpan</label>' : ''}
       </div>
     </div>
@@ -105,22 +110,31 @@ function openProductForm(container, product = null) {
   });
 
   const form = document.getElementById('product-form');
-  const imageInput = form.querySelector('#product-image');
+  const galleryInput = form.querySelector('#product-image-gallery');
+  const cameraInput = form.querySelector('#product-image-camera');
   const preview = form.querySelector('#product-image-preview');
   const removeImage = form.querySelector('#remove-product-image');
   let previewUrl = '';
+  let selectedImageFile = null;
 
   form.querySelectorAll('.currency-input').forEach(attachCurrencyInput);
   form.querySelector('[data-modal-close]').addEventListener('click', closeModal);
 
-  imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
+  const handleImageSelection = input => {
+    const file = input.files?.[0];
     if (!file) return;
+    selectedImageFile = file;
+    // Bersihkan input lain agar sumber pilihan terakhir yang dipakai.
+    if (input !== galleryInput) galleryInput.value = '';
+    if (input !== cameraInput) cameraInput.value = '';
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(file);
     preview.innerHTML = `<img src="${previewUrl}" alt="Preview foto baru">`;
     if (removeImage) removeImage.checked = false;
-  });
+  };
+
+  galleryInput.addEventListener('change', () => handleImageSelection(galleryInput));
+  cameraInput.addEventListener('change', () => handleImageSelection(cameraInput));
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
@@ -128,7 +142,7 @@ function openProductForm(container, product = null) {
     setButtonLoading(submit, true, 'Menyimpan foto & produk…');
     try {
       const fd = new FormData(form);
-      const file = imageInput.files[0];
+      const file = selectedImageFile;
       let imageChange = null;
 
       if (file) {

@@ -1,6 +1,6 @@
 # Toko Emas Hidayah — GitHub Pages + Firebase
 
-Versi: 2.1.1
+Versi: 2.1.2
 
 Paket ini memakai:
 
@@ -10,9 +10,9 @@ Paket ini memakai:
 - Foto produk juga disimpan di Cloud Firestore setelah dikompresi otomatis.
 - Firebase Hosting dan Cloud Storage tidak dipakai.
 
-## Perubahan utama v2.1.1
+## Perubahan utama v2.1.2
 
-Fitur foto produk dirombak total. Versi lama mencoba mengunggah foto ke Cloud Storage. Karena project Firebase pada paket Spark tidak dapat memakai Cloud Storage, foto gagal tersimpan. Versi 2.1.1 tidak bergantung pada Cloud Storage lagi.
+Fitur foto produk dirombak total. Versi lama mencoba mengunggah foto ke Cloud Storage. Karena project Firebase pada paket Spark tidak dapat memakai Cloud Storage, foto gagal tersimpan. Versi 2.1.2 tidak bergantung pada Cloud Storage lagi.
 
 Saat Pemilik/Administrator memilih foto:
 
@@ -31,7 +31,7 @@ Saat Pemilik/Administrator memilih foto:
 
 Field foto utama: `dataUrl`, `mimeType`, `sizeBytes`, `width`, `height`, `updatedAt`, `updatedBy`.
 
-## Pasang rules dan indeks Firebase v2.1.1
+## Pasang rules dan indeks Firebase v2.1.2
 
 Buka Terminal pada folder paket ini, lalu jalankan:
 
@@ -71,7 +71,7 @@ Setelah GitHub Pages selesai membangun ulang, lakukan hard refresh atau buka URL
 Cloud Firestore membatasi ukuran satu dokumen sekitar 1 MiB. Karena itu aplikasi mengompresi setiap foto secara otomatis dan rules menolak foto hasil kompresi yang terlalu besar. Foto produk sebaiknya berupa satu objek perhiasan dengan crop yang cukup dekat agar tetap tajam tetapi hemat data.
 
 
-## Perbaikan v2.1.1 — Kasir & Stok
+## Perbaikan v2.1.2 — Kasir & Stok
 - Pemilihan produk stok 1 item tidak lagi membingungkan: produk pertama masuk ke keranjang dan notifikasi sukses tampil.
 - Klik ulang produk yang stoknya sudah maksimum menampilkan penjelasan bahwa produk sudah ada di keranjang.
 - Produk satuan gram divalidasi berdasarkan berat stok, bukan jumlah item.

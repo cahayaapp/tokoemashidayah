@@ -1,8 +1,8 @@
-import { listBuybacks, listCustomers, listGoldStock, createBuyback } from '../services/data-service.js?v=2.1.1';
-import { state } from '../core/state.js?v=2.1.1';
-import { KARATS, PAYMENT_METHODS } from '../core/constants.js?v=2.1.1';
-import { formatRupiah, formatDateTime, formatNumber, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
-import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
+import { listBuybacks, listCustomers, listGoldStock, createBuyback } from '../services/data-service.js?v=2.1.2';
+import { state } from '../core/state.js?v=2.1.2';
+import { KARATS, PAYMENT_METHODS } from '../core/constants.js?v=2.1.2';
+import { formatRupiah, formatDateTime, formatNumber, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.2';
+import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.2';
 
 let buybacks=[];let customers=[];let goldStock=[];
 export async function renderBuyback(container){container.innerHTML=`<section class="page">${pageLoading('Memuat data buyback…')}</section>`;[buybacks,customers,goldStock]=await Promise.all([listBuybacks(),listCustomers(),listGoldStock()]);draw(container)}

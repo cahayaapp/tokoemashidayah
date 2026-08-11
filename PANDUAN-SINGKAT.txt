@@ -1,10 +1,10 @@
-TOKO EMAS HIDAYAH v2.1.1
+TOKO EMAS HIDAYAH v2.1.2
 GITHUB PAGES + FIREBASE FIRESTORE
 
 FOTO PRODUK SEKARANG DISIMPAN LANGSUNG DI FIRESTORE.
 CLOUD STORAGE TIDAK DIPERLUKAN.
 
-1. Buka Terminal pada folder paket v2.1.1.
+1. Buka Terminal pada folder paket v2.1.2.
 2. Jalankan:
    npx firebase-tools@latest use tokoemas-79e07
    npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes
@@ -19,3 +19,7 @@ CLOUD STORAGE TIDAK DIPERLUKAN.
 JANGAN DEPLOY FIREBASE HOSTING.
 JANGAN DEPLOY CLOUD STORAGE.
 Nama toko: Toko Emas Hidayah.
+
+PERUBAHAN v2.1.2
+- Upload foto mobile kini memiliki tombol Pilih dari Galeri dan Ambil Foto secara terpisah.
+- Pilih dari Galeri tidak memakai atribut capture, sehingga tidak memaksa kamera HP.

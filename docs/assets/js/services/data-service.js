@@ -1,6 +1,6 @@
-import { db } from '../config/firebase.js?v=2.1.1';
-import { state } from '../core/state.js?v=2.1.1';
-import { generateCode, monthStart, monthEnd, dayStart, dayEnd } from '../core/utils.js?v=2.1.1';
+import { db } from '../config/firebase.js?v=2.1.2';
+import { state } from '../core/state.js?v=2.1.2';
+import { generateCode, monthStart, monthEnd, dayStart, dayEnd } from '../core/utils.js?v=2.1.2';
 import {
   collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit,
   serverTimestamp, Timestamp, writeBatch, runTransaction, deleteField

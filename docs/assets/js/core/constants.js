@@ -1,5 +1,5 @@
 export const APP_NAME = 'Toko Emas Hidayah';
-export const APP_VERSION = '2.1.1';
+export const APP_VERSION = '2.1.2';
 
 export const ROLES = {
   owner: { label: 'Pemilik', level: 100 },
