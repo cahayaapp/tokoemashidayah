@@ -1,10 +1,10 @@
-TOKO EMAS HIDAYAH v2.1.0
+TOKO EMAS HIDAYAH v2.1.1
 GITHUB PAGES + FIREBASE FIRESTORE
 
 FOTO PRODUK SEKARANG DISIMPAN LANGSUNG DI FIRESTORE.
 CLOUD STORAGE TIDAK DIPERLUKAN.
 
-1. Buka Terminal pada folder paket v2.1.0.
+1. Buka Terminal pada folder paket v2.1.1.
 2. Jalankan:
    npx firebase-tools@latest use tokoemas-79e07
    npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes

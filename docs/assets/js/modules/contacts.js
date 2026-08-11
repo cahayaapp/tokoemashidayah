@@ -1,7 +1,7 @@
-import { listCustomers, listSuppliers, saveContact, removeContact } from '../services/data-service.js?v=2.1.0';
-import { canManage } from '../core/state.js?v=2.1.0';
-import { normalizeText, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, openModal, closeModal, confirmDialog, toast, setButtonLoading } from '../core/ui.js?v=2.1.0';
+import { listCustomers, listSuppliers, saveContact, removeContact } from '../services/data-service.js?v=2.1.1';
+import { canManage } from '../core/state.js?v=2.1.1';
+import { normalizeText, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, openModal, closeModal, confirmDialog, toast, setButtonLoading } from '../core/ui.js?v=2.1.1';
 
 let activeTab = 'customer';
 let customers = [];

@@ -1,8 +1,8 @@
-import { listExpenses, createExpense, removeExpense } from '../services/data-service.js?v=2.1.0';
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../core/constants.js?v=2.1.0';
-import { canManage } from '../core/state.js?v=2.1.0';
-import { formatRupiah, formatDate, dateInputValue, sum, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.0';
+import { listExpenses, createExpense, removeExpense } from '../services/data-service.js?v=2.1.1';
+import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from '../core/constants.js?v=2.1.1';
+import { canManage } from '../core/state.js?v=2.1.1';
+import { formatRupiah, formatDate, dateInputValue, sum, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
 
 let expenses=[];
 export async function renderExpenses(container){container.innerHTML=`<section class="page">${pageLoading('Memuat pengeluaran…')}</section>`;expenses=await listExpenses();draw(container)}

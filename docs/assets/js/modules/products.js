@@ -1,8 +1,8 @@
-import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.0';
-import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.0';
-import { canManage } from '../core/state.js?v=2.1.0';
-import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.0';
+import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.1';
+import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.1';
+import { canManage } from '../core/state.js?v=2.1.1';
+import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
 
 let products = [];
 let filtered = [];
@@ -92,7 +92,7 @@ function openProductForm(container, product = null) {
       <div class="field"><label>Kemurnian (%)</label><input type="number" step="0.01" name="purity" value="${product?.purity || ''}" placeholder="91.67"></div>
       <div class="field"><label>Satuan Stok</label><select name="unitType"><option value="item" ${product?.unitType!=='gram'?'selected':''}>Per item</option><option value="gram" ${product?.unitType==='gram'?'selected':''}>Per gram</option></select></div>
       <div class="field"><label>Berat per Item (gram)</label><input type="number" step="0.001" name="weightPerItem" value="${product?.weightPerItem || ''}"></div>
-      <div class="field"><label>Jumlah Stok</label><input type="number" step="0.001" name="stockQty" value="${product?.stockQty ?? 0}"></div>
+      <div class="field"><label>Jumlah Stok (item)</label><input type="number" min="0" step="1" name="stockQty" value="${product?.stockQty ?? 0}"><small>Untuk satuan per item, isi jumlah barang. Untuk satuan per gram, utamakan Total Berat Stok.</small></div>
       <div class="field"><label>Total Berat Stok (gram)</label><input type="number" step="0.001" name="stockWeightGrams" value="${product?.stockWeightGrams ?? 0}"></div>
       <div class="field"><label>Stok Minimum</label><input type="number" step="0.001" name="minStock" value="${product?.minStock ?? 1}"></div>
       <div class="field"><label>Mode Harga</label><select name="priceMode" id="price-mode"><option value="fixed" ${product?.priceMode!=='gold_rate'?'selected':''}>Harga tetap per item</option><option value="gold_rate" ${product?.priceMode==='gold_rate'?'selected':''}>Harga emas per gram</option></select></div>

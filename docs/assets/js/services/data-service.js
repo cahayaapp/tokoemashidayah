@@ -1,6 +1,6 @@
-import { db } from '../config/firebase.js?v=2.1.0';
-import { state } from '../core/state.js?v=2.1.0';
-import { generateCode, monthStart, monthEnd, dayStart, dayEnd } from '../core/utils.js?v=2.1.0';
+import { db } from '../config/firebase.js?v=2.1.1';
+import { state } from '../core/state.js?v=2.1.1';
+import { generateCode, monthStart, monthEnd, dayStart, dayEnd } from '../core/utils.js?v=2.1.1';
 import {
   collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit,
   serverTimestamp, Timestamp, writeBatch, runTransaction, deleteField
@@ -189,17 +189,29 @@ export async function createSale(data) {
     }
     for (const { ref: productRef, snap, line } of productDocs) {
       const product = snap.data();
-      const currentQty = Number(product.stockQty) || 0;
-      const currentWeight = Number(product.stockWeightGrams) || 0;
-      const qty = Number(line.qty) || 0;
-      const weight = Number(line.weightGrams) || 0;
-      if (qty > currentQty + 0.0001) throw new Error(`Stok ${line.name} tidak mencukupi.`);
-      if (weight > 0 && currentWeight > 0 && weight > currentWeight + 0.0001) throw new Error(`Berat stok ${line.name} tidak mencukupi.`);
-      transaction.update(productRef, { stockQty: Math.max(0, currentQty - qty), stockWeightGrams: Math.max(0, currentWeight - weight), updatedAt: serverTimestamp(), updatedBy: state.user.uid });
+      const currentQty = Math.max(0, Number(product.stockQty) || 0);
+      const storedWeight = Math.max(0, Number(product.stockWeightGrams) || 0);
+      const qty = Math.max(0, Number(line.qty) || 0);
+      const weight = Math.max(0, Number(line.weightGrams) || 0);
+      const unitType = line.unitType || product.unitType || 'item';
+      const gramMode = unitType === 'gram';
+      const legacyGramInQty = gramMode && storedWeight <= 0 && currentQty > 0;
+      const availableWeight = legacyGramInQty ? currentQty : storedWeight;
+
+      if (!gramMode && qty > currentQty + 0.0001) throw new Error(`Stok ${line.name} tidak mencukupi. Tersedia ${currentQty} item.`);
+      if (weight > 0 && availableWeight > 0 && weight > availableWeight + 0.0001) throw new Error(`Berat stok ${line.name} tidak mencukupi. Tersedia ${availableWeight} gram.`);
+
+      const nextQty = gramMode
+        ? (legacyGramInQty ? Math.max(0, currentQty - weight) : currentQty)
+        : Math.max(0, currentQty - qty);
+      const nextWeight = availableWeight > 0 ? Math.max(0, availableWeight - weight) : storedWeight;
+      const qtyDelta = gramMode ? (legacyGramInQty ? -weight : 0) : -qty;
+
+      transaction.update(productRef, { stockQty: nextQty, stockWeightGrams: nextWeight, updatedAt: serverTimestamp(), updatedBy: state.user.uid });
       transaction.set(doc(collection(db, 'inventoryMovements')), cleanObject({
         code: generateCode('STK'), type: 'SALE_OUT', productId: line.productId, productName: line.name,
-        referenceId: saleRef.id, referenceNo: invoiceNo, qtyDelta: -qty, weightDelta: -weight,
-        balanceQty: Math.max(0, currentQty - qty), balanceWeight: Math.max(0, currentWeight - weight),
+        referenceId: saleRef.id, referenceNo: invoiceNo, qtyDelta, weightDelta: -weight,
+        balanceQty: nextQty, balanceWeight: nextWeight,
         note: `Penjualan ${invoiceNo}`, ...actor(), createdAt: serverTimestamp()
       }));
     }

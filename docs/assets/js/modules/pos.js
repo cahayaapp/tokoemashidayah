@@ -1,8 +1,8 @@
-import { listProducts, listCustomers, createSale } from '../services/data-service.js?v=2.1.0';
-import { state } from '../core/state.js?v=2.1.0';
-import { PAYMENT_METHODS } from '../core/constants.js?v=2.1.0';
-import { formatRupiah, formatNumber, normalizeText, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.0';
+import { listProducts, listCustomers, createSale } from '../services/data-service.js?v=2.1.1';
+import { state } from '../core/state.js?v=2.1.1';
+import { PAYMENT_METHODS } from '../core/constants.js?v=2.1.1';
+import { formatRupiah, formatNumber, normalizeText, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.1';
 
 let catalog = [];
 let customers = [];
@@ -22,7 +22,7 @@ function draw(container) {
     <section class="page">
       <header class="page-head"><div><span class="eyebrow">Point of Sale</span><h2>Kasir Toko Emas</h2><p>Pilih produk, sesuaikan berat dan harga, lalu selesaikan pembayaran.</p></div><div class="page-actions"><span class="badge badge--success">Kasir: ${escapeHTML(state.profile?.name || '')}</span></div></header>
       <div class="pos-layout">
-        <article class="card product-browser"><div class="toolbar"><div class="toolbar__left"><div class="search-box"><span>⌕</span><input class="search-input" id="pos-search" placeholder="Cari nama, SKU, atau scan barcode…" autofocus></div><select class="filter-select" id="pos-category"><option value="">Semua Kategori</option>${categories.map(item => `<option>${escapeHTML(item)}</option>`).join('')}</select></div><div class="toolbar__right"><span class="badge badge--neutral">${catalog.filter(p => Number(p.stockQty)>0).length} tersedia</span></div></div><div id="pos-products">${renderProductGrid()}</div></article>
+        <article class="card product-browser"><div class="toolbar"><div class="toolbar__left"><div class="search-box"><span>⌕</span><input class="search-input" id="pos-search" placeholder="Cari nama, SKU, atau scan barcode…" autofocus></div><select class="filter-select" id="pos-category"><option value="">Semua Kategori</option>${categories.map(item => `<option>${escapeHTML(item)}</option>`).join('')}</select></div><div class="toolbar__right"><span class="badge badge--neutral">${catalog.filter(productIsAvailable).length} tersedia</span></div></div><div id="pos-products">${renderProductGrid()}</div></article>
         <article class="card cart-panel" id="cart-panel">${renderCart()}</article>
       </div>
     </section>`;
@@ -37,13 +37,29 @@ function getSellRate(product) {
 
 function getProductPrice(product) { return product.priceMode === 'gold_rate' ? getSellRate(product) : Number(product.sellingPrice || 0); }
 
+function isGramProduct(product) { return product?.unitType === 'gram'; }
+function productStockQty(product) { return Math.max(0, Number(product?.stockQty) || 0); }
+function productStockWeight(product) {
+  const storedWeight = Math.max(0, Number(product?.stockWeightGrams) || 0);
+  if (storedWeight > 0) return storedWeight;
+  return isGramProduct(product) ? productStockQty(product) : 0;
+}
+function productIsAvailable(product) {
+  return isGramProduct(product) ? productStockWeight(product) > 0 : productStockQty(product) >= 1;
+}
+function productStockLabel(product) {
+  return isGramProduct(product)
+    ? `Stok ${formatNumber(productStockWeight(product))} gr`
+    : `Stok ${formatNumber(productStockQty(product))} item`;
+}
+
 function renderProductGrid() {
   const filtered = catalog.filter(product => {
     const haystack = normalizeText(`${product.name} ${product.sku} ${product.barcode || ''}`);
-    return product.active !== false && Number(product.stockQty) > 0 && (!search || haystack.includes(search)) && (!category || product.category === category);
+    return product.active !== false && productIsAvailable(product) && (!search || haystack.includes(search)) && (!category || product.category === category);
   });
   if (!filtered.length) return tableEmpty('Tidak ada produk yang cocok atau stok tersedia.');
-  return `<div class="product-grid">${filtered.map(product => `<button class="product-card" data-add-product="${product.id}"><div class="product-card__image">${product.imageUrl ? `<img src="${product.imageUrl}" alt="">` : escapeHTML(product.name.slice(0,2).toUpperCase())}</div><h4>${escapeHTML(product.name)}</h4><small>${escapeHTML(product.sku)} • ${product.karat || '—'}K • ${formatNumber(product.weightPerItem)} gr</small><div class="product-card__meta"><span class="product-card__price">${product.priceMode === 'gold_rate' ? `${formatRupiah(getProductPrice(product))}/gr` : formatRupiah(product.sellingPrice)}</span><span class="badge badge--success">Stok ${formatNumber(product.stockQty)}</span></div></button>`).join('')}</div>`;
+  return `<div class="product-grid">${filtered.map(product => `<button class="product-card" data-add-product="${product.id}"><div class="product-card__image">${product.imageUrl ? `<img src="${product.imageUrl}" alt="">` : escapeHTML(product.name.slice(0,2).toUpperCase())}</div><h4>${escapeHTML(product.name)}</h4><small>${escapeHTML(product.sku)} • ${product.karat || '—'}K • ${formatNumber(product.weightPerItem)} gr</small><div class="product-card__meta"><span class="product-card__price">${product.priceMode === 'gold_rate' ? `${formatRupiah(getProductPrice(product))}/gr` : formatRupiah(product.sellingPrice)}</span><span class="badge badge--success">${productStockLabel(product)}</span></div></button>`).join('')}</div>`;
 }
 
 function bindProductCards(container) {
@@ -54,22 +70,45 @@ function bindProductCards(container) {
 }
 
 function addToCart(product) {
-  const existing = cart.find(line => line.productId === product.id);
-  if (existing) {
-    if (existing.qty + 1 > Number(product.stockQty)) return toast('Jumlah melebihi stok tersedia.', 'warning');
-    existing.qty += 1;
-    existing.weightGrams = round3(existing.weightGrams + Number(product.weightPerItem || 0));
-    recalcLine(existing);
+  if (!product || !productIsAvailable(product)) {
+    toast('Stok produk ini sudah habis.', 'warning');
     return;
   }
+
+  const gramMode = isGramProduct(product);
+  const existing = cart.find(line => line.productId === product.id);
+  if (existing) {
+    if (gramMode) {
+      toast(`${product.name} sudah ada di keranjang. Atur berat penjualan pada kolom gram.`, 'info', 2600);
+      return;
+    }
+    const maxQty = productStockQty(product);
+    if (existing.qty + 1 > maxQty + 0.0001) {
+      toast(`${product.name} sudah ada di keranjang. Stok tersedia hanya ${formatNumber(maxQty)} item.`, 'warning', 3200);
+      return;
+    }
+    existing.qty = round3(existing.qty + 1);
+    existing.weightGrams = round3(existing.weightGrams + Number(product.weightPerItem || 0));
+    recalcLine(existing);
+    toast(`Jumlah ${product.name}: ${formatNumber(existing.qty)} item.`, 'success', 1400);
+    return;
+  }
+
+  const stockWeight = productStockWeight(product);
+  const suggestedWeight = gramMode
+    ? round3(Math.min(stockWeight, Math.max(0.001, Number(product.weightPerItem) || 1)))
+    : Number(product.weightPerItem || 0);
   const line = {
     productId: product.id, sku: product.sku, name: product.name, karat: product.karat || 0,
-    qty: 1, weightGrams: Number(product.weightPerItem || 0), unitPrice: getProductPrice(product),
-    priceBasis: product.priceMode === 'gold_rate' ? 'gram' : 'item', stockQty: Number(product.stockQty || 0),
-    stockWeight: Number(product.stockWeightGrams || 0), weightPerItem: Number(product.weightPerItem || 0),
+    unitType: gramMode ? 'gram' : 'item',
+    qty: 1, weightGrams: suggestedWeight, unitPrice: getProductPrice(product),
+    priceBasis: product.priceMode === 'gold_rate' ? 'gram' : 'item', stockQty: productStockQty(product),
+    stockWeight, weightPerItem: Number(product.weightPerItem || 0),
     costPrice: Number(product.costPrice || 0)
   };
-  recalcLine(line); cart.push(line);
+  recalcLine(line);
+  cart.push(line);
+  toast(`${product.name} ditambahkan ke keranjang.`, 'success', 1500);
 }
 
 function recalcLine(line) {
@@ -83,7 +122,20 @@ function cartSubtotal() { return sum(cart, line => line.subtotal); }
 function renderCart() {
   const subtotal = cartSubtotal();
   return `<div class="card__head"><div><span class="eyebrow">Keranjang</span><h3>Transaksi Penjualan</h3><p>${cart.length} jenis produk</p></div>${cart.length ? '<button class="button button--danger button--sm" id="clear-cart">Kosongkan</button>' : ''}</div>
-    ${cart.length ? `<div class="cart-lines">${cart.map((line,index) => `<div class="cart-line"><div class="cart-line__top"><div><strong>${escapeHTML(line.name)}</strong><small style="display:block;color:var(--muted)">${line.karat || '—'}K • ${line.priceBasis === 'gram' ? 'harga/gram':'harga/item'}</small></div><button data-remove-line="${index}" title="Hapus">×</button></div><div class="cart-line__controls"><input type="number" min="0.001" step="0.001" value="${line.qty}" data-line-qty="${index}" title="Jumlah"><input type="number" min="0" step="0.001" value="${line.weightGrams}" data-line-weight="${index}" title="Berat gram"><input type="number" min="0" step="1000" value="${line.unitPrice}" data-line-price="${index}" title="Harga"></div><div class="summary-row"><span>${formatNumber(line.qty)} item • ${formatNumber(line.weightGrams)} gr</span><strong>${formatRupiah(line.subtotal)}</strong></div></div>`).join('')}</div><div class="cart-summary"><div class="summary-row"><span>Subtotal</span><strong>${formatRupiah(subtotal)}</strong></div><div class="summary-row"><span>Potongan & pajak</span><strong>Dihitung saat bayar</strong></div><div class="summary-row summary-row--total"><span>Estimasi Total</span><strong>${formatRupiah(subtotal)}</strong></div></div><div class="cart-checkout"><button class="button button--gold button--block" id="checkout">Bayar Sekarang →</button></div>` : tableEmpty('Keranjang masih kosong.')}`;
+    ${cart.length ? `<div class="cart-lines">${cart.map((line,index) => {
+      const gramMode = line.unitType === 'gram';
+      const qtyControl = gramMode
+        ? `<input type="number" value="1" disabled title="Produk berbasis gram — atur berat pada kolom berikutnya">`
+        : `<input type="number" min="1" step="1" max="${line.stockQty}" value="${line.qty}" data-line-qty="${index}" title="Jumlah item">`;
+      const weightMax = line.stockWeight > 0 ? ` max="${line.stockWeight}"` : '';
+      const stockHint = gramMode
+        ? `Stok ${formatNumber(line.stockWeight)} gr`
+        : `Stok ${formatNumber(line.stockQty)} item${line.stockWeight > 0 ? ` • ${formatNumber(line.stockWeight)} gr` : ''}`;
+      const summary = gramMode
+        ? `${formatNumber(line.weightGrams)} gr`
+        : `${formatNumber(line.qty)} item • ${formatNumber(line.weightGrams)} gr`;
+      return `<div class="cart-line"><div class="cart-line__top"><div><strong>${escapeHTML(line.name)}</strong><small style="display:block;color:var(--muted)">${line.karat || '—'}K • ${line.priceBasis === 'gram' ? 'harga/gram':'harga/item'} • ${stockHint}</small></div><button data-remove-line="${index}" title="Hapus">×</button></div><div class="cart-line__controls">${qtyControl}<input type="number" min="0.001" step="0.001"${weightMax} value="${line.weightGrams}" data-line-weight="${index}" title="Berat gram"><input type="number" min="0" step="1000" value="${line.unitPrice}" data-line-price="${index}" title="Harga"></div><div class="summary-row"><span>${summary}</span><strong>${formatRupiah(line.subtotal)}</strong></div></div>`;
+    }).join('')}</div><div class="cart-summary"><div class="summary-row"><span>Subtotal</span><strong>${formatRupiah(subtotal)}</strong></div><div class="summary-row"><span>Potongan & pajak</span><strong>Dihitung saat bayar</strong></div><div class="summary-row summary-row--total"><span>Estimasi Total</span><strong>${formatRupiah(subtotal)}</strong></div></div><div class="cart-checkout"><button class="button button--gold button--block" id="checkout">Bayar Sekarang →</button></div>` : tableEmpty('Keranjang masih kosong.')}`;
 }
 
 function refreshCart(container) {
@@ -102,12 +154,39 @@ function bindCart(container) {
 
 function updateLine(container, index, field, value) {
   const line = cart[index];
-  const numeric = Math.max(0, Number(value) || 0);
-  if (field === 'qty' && numeric > line.stockQty) { toast('Jumlah melebihi stok tersedia.', 'warning'); return refreshCart(container); }
-  if (field === 'weightGrams' && line.stockWeight > 0 && numeric > line.stockWeight) { toast('Berat melebihi stok tersedia.', 'warning'); return refreshCart(container); }
-  line[field] = field === 'weightGrams' || field === 'qty' ? round3(numeric) : numeric;
-  if (field === 'qty' && line.weightPerItem > 0) line.weightGrams = round3(line.qty * line.weightPerItem);
-  recalcLine(line); refreshCart(container);
+  if (!line) return;
+  const gramMode = line.unitType === 'gram';
+  let numeric = Math.max(0, Number(value) || 0);
+
+  if (field === 'qty') {
+    if (gramMode) return refreshCart(container);
+    numeric = Math.max(1, Math.floor(numeric));
+    if (numeric > line.stockQty + 0.0001) {
+      toast(`Stok tersedia hanya ${formatNumber(line.stockQty)} item.`, 'warning');
+      return refreshCart(container);
+    }
+    line.qty = numeric;
+    if (line.weightPerItem > 0) {
+      const nextWeight = round3(line.qty * line.weightPerItem);
+      if (line.stockWeight > 0 && nextWeight > line.stockWeight + 0.0001) {
+        toast(`Berat stok tersedia hanya ${formatNumber(line.stockWeight)} gr.`, 'warning');
+        return refreshCart(container);
+      }
+      line.weightGrams = nextWeight;
+    }
+  } else if (field === 'weightGrams') {
+    numeric = round3(Math.max(0.001, numeric));
+    if (line.stockWeight > 0 && numeric > line.stockWeight + 0.0001) {
+      toast(`Berat stok tersedia hanya ${formatNumber(line.stockWeight)} gr.`, 'warning');
+      return refreshCart(container);
+    }
+    line.weightGrams = numeric;
+  } else {
+    line[field] = numeric;
+  }
+
+  recalcLine(line);
+  refreshCart(container);
 }
 
 function openCheckout(container) {
@@ -148,7 +227,7 @@ function openCheckout(container) {
       const selected = form.elements.customerId.selectedOptions[0];
       const saleData = {
         customerId:form.elements.customerId.value, customerName:selected?.dataset.name || 'Pelanggan Umum', customerPhone:selected?.dataset.phone || '',
-        lines:cart.map(line => ({ productId:line.productId, sku:line.sku, name:line.name, karat:line.karat, qty:line.qty, weightGrams:line.weightGrams, unitPrice:line.unitPrice, priceBasis:line.priceBasis, subtotal:line.subtotal, estimatedCost:line.estimatedCost })),
+        lines:cart.map(line => ({ productId:line.productId, sku:line.sku, name:line.name, karat:line.karat, unitType:line.unitType || 'item', qty:line.qty, weightGrams:line.weightGrams, unitPrice:line.unitPrice, priceBasis:line.priceBasis, subtotal:line.subtotal, estimatedCost:line.estimatedCost })),
         subtotal, discount:values.discount, tax:values.tax, grandTotal:values.total, paidAmount:values.paid, changeAmount:Math.max(0,values.paid-values.total), paymentMethod:form.elements.paymentMethod.value, notes:form.elements.notes.value
       };
       const result = await createSale(saleData);

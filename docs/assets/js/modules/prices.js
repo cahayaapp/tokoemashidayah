@@ -1,8 +1,8 @@
-import { saveGoldRates, getGoldRates } from '../services/data-service.js?v=2.1.0';
-import { state, canManage } from '../core/state.js?v=2.1.0';
-import { KARATS, DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.0';
-import { formatRupiah, getErrorMessage } from '../core/utils.js?v=2.1.0';
-import { pageLoading, toast, setButtonLoading } from '../core/ui.js?v=2.1.0';
+import { saveGoldRates, getGoldRates } from '../services/data-service.js?v=2.1.1';
+import { state, canManage } from '../core/state.js?v=2.1.1';
+import { KARATS, DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.1';
+import { formatRupiah, getErrorMessage } from '../core/utils.js?v=2.1.1';
+import { pageLoading, toast, setButtonLoading } from '../core/ui.js?v=2.1.1';
 
 export async function renderPrices(container) {
   container.innerHTML = `<section class="page">${pageLoading('Memuat harga emas…')}</section>`;

@@ -1,7 +1,7 @@
-import { listSales, listPurchases, listBuybacks, listExpenses, voidSale } from '../services/data-service.js?v=2.1.0';
-import { canManage } from '../core/state.js?v=2.1.0';
-import { formatRupiah, formatDateTime, formatDate, formatNumber, sum, dateInputValue, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, badge, confirmDialog, toast, setButtonLoading } from '../core/ui.js?v=2.1.0';
+import { listSales, listPurchases, listBuybacks, listExpenses, voidSale } from '../services/data-service.js?v=2.1.1';
+import { canManage } from '../core/state.js?v=2.1.1';
+import { formatRupiah, formatDateTime, formatDate, formatNumber, sum, dateInputValue, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, badge, confirmDialog, toast, setButtonLoading } from '../core/ui.js?v=2.1.1';
 
 let startDate;
 let endDate;

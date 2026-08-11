@@ -1,6 +1,6 @@
-import { listProducts, listSuppliers, listPurchases, createPurchase } from '../services/data-service.js?v=2.1.0';
-import { formatRupiah, formatDateTime, formatNumber, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.0';
-import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading } from '../core/ui.js?v=2.1.0';
+import { listProducts, listSuppliers, listPurchases, createPurchase } from '../services/data-service.js?v=2.1.1';
+import { formatRupiah, formatDateTime, formatNumber, sum, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.1';
+import { pageLoading, tableEmpty, openModal, closeModal, toast, setButtonLoading } from '../core/ui.js?v=2.1.1';
 
 let products = [];
 let suppliers = [];
