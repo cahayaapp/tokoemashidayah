@@ -1,0 +1,21 @@
+# Checklist Pengujian Sebelum Go-Live
+
+- [ ] Email/Password Authentication telah aktif.
+- [ ] Firestore telah dibuat dalam Production mode.
+- [ ] `firestore.rules` dan `firestore.indexes.json` telah terpasang.
+- [ ] Pemilik pertama berhasil dibuat melalui Aktivasi Awal.
+- [ ] Akun Kasir hanya melihat menu yang diizinkan.
+- [ ] Produk harga tetap menghasilkan subtotal yang benar.
+- [ ] Produk harga per gram mengikuti kadar dan ongkos.
+- [ ] Penjualan mengurangi jumlah dan berat stok.
+- [ ] Pembatalan mengembalikan stok.
+- [ ] Pembelian menambah jumlah dan berat stok.
+- [ ] Buyback menambah stok emas bekas.
+- [ ] Pengeluaran masuk ke perhitungan laba estimasi.
+- [ ] Ekspor CSV dapat dibuka di Excel.
+- [ ] Struk dapat dicetak dari laptop dan HP.
+- [ ] Tampilan diuji pada layar desktop dan mobile.
+- [ ] Akun nonaktif tidak dapat membaca data.
+- [ ] Foto produk dapat dipilih, dipreview, disimpan, dibaca ulang, diganti, dan dihapus melalui Cloud Firestore.
+- [ ] Nilai pajak dan footer struk telah disesuaikan.
+- [ ] Data simulasi dibersihkan sebelum operasional resmi.

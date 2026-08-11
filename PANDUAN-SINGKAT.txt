@@ -1,0 +1,21 @@
+TOKO EMAS HIDAYAH v2.1.0
+GITHUB PAGES + FIREBASE FIRESTORE
+
+FOTO PRODUK SEKARANG DISIMPAN LANGSUNG DI FIRESTORE.
+CLOUD STORAGE TIDAK DIPERLUKAN.
+
+1. Buka Terminal pada folder paket v2.1.0.
+2. Jalankan:
+   npx firebase-tools@latest use tokoemas-79e07
+   npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes
+
+3. Upload/replace paket terbaru di repository GitHub.
+4. GitHub Pages tetap: main /docs.
+5. Buka web dengan ?v=210 agar cache lama tidak dipakai.
+6. Login sebagai Pemilik/Admin.
+7. Produk & Stok > Tambah/Edit Produk > pilih foto > Simpan.
+8. Cek Firestore: koleksi productImages akan muncul otomatis.
+
+JANGAN DEPLOY FIREBASE HOSTING.
+JANGAN DEPLOY CLOUD STORAGE.
+Nama toko: Toko Emas Hidayah.

@@ -1,0 +1,174 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function storePath() {
+      return /databases/$(database)/documents/settings/store;
+    }
+
+    function hasOwnProfile() {
+      return signedIn() && exists(profilePath(request.auth.uid));
+    }
+
+    function ownProfile() {
+      return get(profilePath(request.auth.uid)).data;
+    }
+
+    function activeUser() {
+      return hasOwnProfile() && ownProfile().active == true;
+    }
+
+    function roleIs(roles) {
+      return activeUser() && ownProfile().role in roles;
+    }
+
+    function owner() {
+      return roleIs(['owner']);
+    }
+
+    function manager() {
+      return roleIs(['owner', 'admin']);
+    }
+
+    function operational() {
+      return roleIs(['owner', 'admin', 'cashier']);
+    }
+
+    function reader() {
+      return roleIs(['owner', 'admin', 'cashier', 'auditor']);
+    }
+
+    match /users/{uid} {
+      // Aktivasi pertama dibuat bertahap. Pengguna pertama hanya boleh
+      // membuat profil owner miliknya sendiri selama toko belum terbentuk.
+      allow create: if (
+        signedIn()
+        && uid == request.auth.uid
+        && !exists(storePath())
+        && request.resource.data.role == 'owner'
+        && request.resource.data.active == true
+        && request.resource.data.email == request.auth.token.email
+      ) || (
+        manager()
+        && request.resource.data.role in ['admin', 'cashier', 'auditor']
+      );
+
+      allow read: if signedIn() && (
+        uid == request.auth.uid
+        || manager()
+        || roleIs(['auditor'])
+      );
+
+      allow update: if manager()
+        && (request.resource.data.role != 'owner' || owner())
+        && (resource.data.role != 'owner' || owner());
+
+      allow delete: if owner() && uid != request.auth.uid;
+    }
+
+    match /settings/{settingId} {
+      allow create: if (
+        settingId == 'store'
+        && owner()
+        && !exists(storePath())
+        && request.resource.data.ownerUid == request.auth.uid
+      ) || (
+        settingId == 'goldPrices'
+        && owner()
+        && request.resource.data.ownerUid == request.auth.uid
+      );
+
+      allow read: if activeUser();
+      allow update, delete: if manager();
+    }
+
+    match /products/{productId} {
+      allow read: if reader();
+      allow create, delete: if manager();
+      allow update: if manager() || (
+        operational()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['stockQty', 'stockWeightGrams', 'updatedAt', 'updatedBy'])
+      );
+    }
+
+
+
+    // Foto produk disimpan sebagai JPEG terkompresi pada dokumen terpisah
+    // agar aplikasi tetap memakai Firebase tanpa membutuhkan Cloud Storage.
+    match /productImages/{productId} {
+      allow read: if reader();
+      allow create, update: if manager()
+        && request.resource.data.productId == productId
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() <= 650000
+        && request.resource.data.mimeType == 'image/jpeg'
+        && request.resource.data.sizeBytes is int
+        && request.resource.data.sizeBytes <= 420000;
+      allow delete: if manager();
+    }
+
+    match /customers/{id} {
+      allow read: if reader();
+      allow create, update: if operational();
+      allow delete: if manager();
+    }
+
+    match /suppliers/{id} {
+      allow read: if reader();
+      allow write: if manager();
+    }
+
+    match /sales/{id} {
+      allow read: if reader();
+      allow create: if operational() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if manager();
+    }
+
+    match /purchases/{id} {
+      allow read: if reader();
+      allow write: if manager();
+    }
+
+    match /buybacks/{id} {
+      allow read: if reader();
+      allow create: if operational() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if manager();
+    }
+
+    match /goldStock/{id} {
+      allow read: if reader();
+      allow create, update: if operational();
+      allow delete: if manager();
+    }
+
+    match /expenses/{id} {
+      allow read: if reader();
+      allow create: if operational();
+      allow update, delete: if manager();
+    }
+
+    match /inventoryMovements/{id} {
+      allow read: if reader();
+      allow create: if operational() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /auditLogs/{id} {
+      allow read: if roleIs(['owner', 'admin', 'auditor']);
+      allow create: if activeUser() && request.resource.data.actorUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
