@@ -1,4 +1,4 @@
-TOKO EMAS HIDAYAH v2.1.3
+TOKO EMAS HIDAYAH v2.1.4
 
 1. Upload/replace paket ini ke repository GitHub.
 2. Pastikan GitHub Pages = main /docs.
@@ -11,3 +11,12 @@ TOKO EMAS HIDAYAH v2.1.3
 Aktivasi Awal sudah dihapus.
 Tambah pengguna: Pengguna > Tambah Pengguna.
 Akun baru dibuat tanpa mengeluarkan sesi Pemilik.
+
+
+## Perbaikan v2.1.4
+- Tombol **Tambah Pengguna** kini benar-benar membuka formulir pengguna baru.
+- Email dapat diketik pada pengguna baru.
+- Kolom **Kata Sandi Awal** tampil pada pembuatan pengguna baru.
+- Form **Edit Pengguna** tetap mengunci email dan tidak menampilkan kata sandi, karena email/kredensial Auth bukan data profil biasa.
+- Alur Aktivasi Awal tetap dihapus karena toko sudah aktif.
+- Custom domain `tokoemashidayah.online` tetap dipertahankan melalui `docs/CNAME`.

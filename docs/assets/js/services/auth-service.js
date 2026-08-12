@@ -1,7 +1,7 @@
-import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.3';
-import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.3';
-import { state } from '../core/state.js?v=2.1.3';
-import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.3';
+import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.4';
+import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.4';
+import { state } from '../core/state.js?v=2.1.4';
+import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.4';
 import {
   signInWithEmailAndPassword, signOut as firebaseSignOut,
   onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider

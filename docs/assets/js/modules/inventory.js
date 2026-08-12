@@ -1,7 +1,7 @@
-import { listInventoryMovements, listProducts, adjustStock } from '../services/data-service.js?v=2.1.3';
-import { canManage } from '../core/state.js?v=2.1.3';
-import { formatDateTime, formatNumber, dateInputValue, downloadCSV, normalizeText, escapeHTML, getErrorMessage } from '../core/utils.js?v=2.1.3';
-import { pageLoading, tableEmpty, badge, openModal, closeModal, toast, setButtonLoading } from '../core/ui.js?v=2.1.3';
+import { listInventoryMovements, listProducts, adjustStock } from '../services/data-service.js?v=2.1.4';
+import { canManage } from '../core/state.js?v=2.1.4';
+import { formatDateTime, formatNumber, dateInputValue, downloadCSV, normalizeText, escapeHTML, getErrorMessage } from '../core/utils.js?v=2.1.4';
+import { pageLoading, tableEmpty, badge, openModal, closeModal, toast, setButtonLoading } from '../core/ui.js?v=2.1.4';
 
 let movements = [];
 let products = [];

@@ -1,6 +1,6 @@
 # Toko Emas Hidayah — GitHub Pages + Firebase
 
-Versi: **2.1.3**
+Versi: **2.1.4**
 
 Paket produksi untuk toko yang **sudah aktif**.
 
@@ -10,7 +10,7 @@ Paket produksi untuk toko yang **sudah aktif**.
 - Foto produk: Cloud Firestore (`productImages`), terkompresi JPEG
 - Firebase Hosting dan Cloud Storage tidak diperlukan
 
-## Perubahan v2.1.3
+## Perubahan v2.1.4
 
 1. Menu **Aktivasi Awal dihapus total** dari halaman login.
 2. Akun tanpa profil Firestore tidak lagi diarahkan ke aktivasi owner; akses ditolak dan harus didaftarkan oleh Pemilik/Administrator.
@@ -54,3 +54,12 @@ Pengguna baru dapat langsung masuk menggunakan email dan kata sandi yang dibuat.
 Pastikan Email/Password aktif dan domain berikut ada di Authorized domains:
 
 `tokoemashidayah.online`
+
+
+## Perbaikan v2.1.4
+- Tombol **Tambah Pengguna** kini benar-benar membuka formulir pengguna baru.
+- Email dapat diketik pada pengguna baru.
+- Kolom **Kata Sandi Awal** tampil pada pembuatan pengguna baru.
+- Form **Edit Pengguna** tetap mengunci email dan tidak menampilkan kata sandi, karena email/kredensial Auth bukan data profil biasa.
+- Alur Aktivasi Awal tetap dihapus karena toko sudah aktif.
+- Custom domain `tokoemashidayah.online` tetap dipertahankan melalui `docs/CNAME`.

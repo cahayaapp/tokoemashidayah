@@ -1,6 +1,6 @@
-import { getDashboardData } from '../services/data-service.js?v=2.1.3';
-import { formatRupiah, formatNumber, sum, toDate } from '../core/utils.js?v=2.1.3';
-import { renderStatCard, pageLoading, tableEmpty, badge } from '../core/ui.js?v=2.1.3';
+import { getDashboardData } from '../services/data-service.js?v=2.1.4';
+import { formatRupiah, formatNumber, sum, toDate } from '../core/utils.js?v=2.1.4';
+import { renderStatCard, pageLoading, tableEmpty, badge } from '../core/ui.js?v=2.1.4';
 
 export async function renderDashboard(container) {
   container.innerHTML = `<section class="page">${pageLoading('Menyusun ringkasan toko…')}</section>`;

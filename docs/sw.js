@@ -1,4 +1,4 @@
-const CACHE_NAME = 'toko-emas-hidayah-v2.1.3';
+const CACHE_NAME = 'toko-emas-hidayah-v2.1.4';
 self.addEventListener('install', event => { self.skipWaiting(); });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.map(key => caches.delete(key)))));
