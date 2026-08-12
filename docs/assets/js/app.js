@@ -1,20 +1,20 @@
-import { observeSession, login, logout, registerInitialOwner, completeInitialOwnerProfile } from './services/auth-service.js?v=2.1.2';
-import { setSession, clearSession, state } from './core/state.js?v=2.1.2';
-import { NAV_ITEMS, ROLES, APP_VERSION } from './core/constants.js?v=2.1.2';
-import { toast, setButtonLoading } from './core/ui.js?v=2.1.2';
-import { getErrorMessage, escapeHTML } from './core/utils.js?v=2.1.2';
-import { renderDashboard } from './modules/dashboard.js?v=2.1.2';
-import { renderPOS } from './modules/pos.js?v=2.1.2';
-import { renderProducts } from './modules/products.js?v=2.1.2';
-import { renderInventory } from './modules/inventory.js?v=2.1.2';
-import { renderPurchases } from './modules/purchases.js?v=2.1.2';
-import { renderBuyback } from './modules/buyback.js?v=2.1.2';
-import { renderContacts } from './modules/contacts.js?v=2.1.2';
-import { renderExpenses } from './modules/expenses.js?v=2.1.2';
-import { renderReports } from './modules/reports.js?v=2.1.2';
-import { renderPrices } from './modules/prices.js?v=2.1.2';
-import { renderUsers } from './modules/users.js?v=2.1.2';
-import { renderSettings } from './modules/settings.js?v=2.1.2';
+import { observeSession, login, logout } from './services/auth-service.js?v=2.1.3';
+import { setSession, clearSession, state } from './core/state.js?v=2.1.3';
+import { NAV_ITEMS, ROLES, APP_VERSION } from './core/constants.js?v=2.1.3';
+import { toast, setButtonLoading } from './core/ui.js?v=2.1.3';
+import { getErrorMessage, escapeHTML } from './core/utils.js?v=2.1.3';
+import { renderDashboard } from './modules/dashboard.js?v=2.1.3';
+import { renderPOS } from './modules/pos.js?v=2.1.3';
+import { renderProducts } from './modules/products.js?v=2.1.3';
+import { renderInventory } from './modules/inventory.js?v=2.1.3';
+import { renderPurchases } from './modules/purchases.js?v=2.1.3';
+import { renderBuyback } from './modules/buyback.js?v=2.1.3';
+import { renderContacts } from './modules/contacts.js?v=2.1.3';
+import { renderExpenses } from './modules/expenses.js?v=2.1.3';
+import { renderReports } from './modules/reports.js?v=2.1.3';
+import { renderPrices } from './modules/prices.js?v=2.1.3';
+import { renderUsers } from './modules/users.js?v=2.1.3';
+import { renderSettings } from './modules/settings.js?v=2.1.3';
 
 const appRoot = document.getElementById('app');
 const routeHandlers = {
@@ -51,9 +51,14 @@ observeSession(session => {
     renderAccessIssue(`${getErrorMessage(session.error)} Pastikan aturan Firestore versi terbaru sudah dipasang.`);
     return;
   }
-  if (!session.profile || !session.store) {
+  if (!session.profile) {
     setSession(session);
-    renderProfileRecovery(session.user, session.profile);
+    renderAccessIssue('Akun login ini belum terdaftar sebagai pengguna Toko Emas Hidayah. Hubungi Pemilik atau Administrator.');
+    return;
+  }
+  if (!session.store) {
+    setSession(session);
+    renderAccessIssue('Konfigurasi toko belum tersedia. Hubungi Pemilik atau Administrator.');
     return;
   }
   if (session.profile.active === false) {
@@ -82,18 +87,14 @@ function renderAuth() {
         <div class="auth-copy"><span class="eyebrow">Aplikasi Toko Emas Modern</span><h1>Presisi dalam stok. Transparan dalam transaksi.</h1><p>Satu sistem untuk kasir, harga emas, pembelian, buyback, pelanggan, pemasok, laporan, dan pengawasan aktivitas toko.</p></div>
         <div class="auth-features"><div class="auth-feature"><b>POS Responsif</b><span>Nyaman dipakai dari laptop, tablet, maupun HP.</span></div><div class="auth-feature"><b>Stok Berlapis</b><span>Pantau jumlah item sekaligus berat gram.</span></div><div class="auth-feature"><b>Audit Aman</b><span>Jejak aktivitas dan akses berbasis peran.</span></div></div>
       </section>
-      <section class="auth-panel"><div class="auth-card"><div class="auth-card__head"><span class="eyebrow">Selamat Datang</span><h2>Akses Sistem Toko</h2><p>Masuk dengan akun yang telah didaftarkan.</p></div><div class="auth-tabs"><button class="auth-tab is-active" data-auth-tab="login">Masuk</button><button class="auth-tab" data-auth-tab="setup">Aktivasi Awal</button></div><div id="auth-form-host"></div><div class="auth-footer">Toko Emas Hidayah • Versi ${APP_VERSION}</div></div></section>
+      <section class="auth-panel"><div class="auth-card"><div class="auth-card__head"><span class="eyebrow">Selamat Datang</span><h2>Masuk ke Toko Emas Hidayah</h2><p>Gunakan akun yang telah didaftarkan oleh Pemilik atau Administrator.</p></div><div id="auth-form-host"></div><div class="auth-footer">tokoemashidayah.online • Versi ${APP_VERSION}</div></div></section>
     </main>`;
-  appRoot.querySelectorAll('[data-auth-tab]').forEach(button => button.addEventListener('click', () => {
-    appRoot.querySelectorAll('[data-auth-tab]').forEach(item => item.classList.toggle('is-active', item === button));
-    button.dataset.authTab === 'login' ? renderLoginForm() : renderSetupForm();
-  }));
   renderLoginForm();
 }
 
 function renderLoginForm() {
   const host = document.getElementById('auth-form-host');
-  host.innerHTML = `<form id="login-form"><div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required placeholder="nama@toko.com"></div><div class="field" style="margin-top:14px"><label>Kata Sandi</label><input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="button button--gold button--block" type="submit" style="margin-top:20px">Masuk ke Aplikasi</button></form>`;
+  host.innerHTML = `<form id="login-form"><div class="field"><label>Email</label><input type="email" name="email" autocomplete="email" required placeholder="nama@toko.com"></div><div class="field" style="margin-top:14px"><label>Kata Sandi</label><input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></div><button class="button button--gold button--block" type="submit" style="margin-top:20px">Masuk ke Aplikasi</button></form><div class="auth-note" style="margin-top:16px">Akun baru dibuat oleh Pemilik atau Administrator melalui menu <strong>Pengguna</strong>.</div>`;
   const form = host.querySelector('#login-form');
   form.addEventListener('submit', async event => {
     event.preventDefault();
@@ -102,57 +103,6 @@ function renderLoginForm() {
     try { await login(form.elements.email.value, form.elements.password.value); }
     catch (error) { toast(getErrorMessage(error), 'error'); setButtonLoading(button, false); }
   });
-}
-
-function renderSetupForm() {
-  const host = document.getElementById('auth-form-host');
-  host.innerHTML = `<div class="auth-note" style="margin-bottom:16px">Gunakan hanya satu kali untuk membuat akun Pemilik pertama. Setelah toko aktif, buat akun lain melalui menu Pengguna.</div><form id="setup-form"><div class="form-grid"><div class="field field--full"><label>Nama Pemilik *</label><input name="name" required></div><div class="field field--full"><label>Nama Toko *</label><input name="storeName" required value="Toko Emas Hidayah"></div><div class="field"><label>Telepon</label><input name="phone"></div><div class="field"><label>Email Login *</label><input type="email" name="email" required></div><div class="field field--full"><label>Alamat Toko</label><textarea name="address"></textarea></div><div class="field"><label>Kata Sandi *</label><input type="password" name="password" minlength="6" required></div><div class="field"><label>Ulangi Kata Sandi *</label><input type="password" name="confirmPassword" minlength="6" required></div></div><button class="button button--gold button--block" type="submit" style="margin-top:20px">Aktifkan Toko</button></form>`;
-  const form = host.querySelector('#setup-form');
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    if (form.elements.password.value !== form.elements.confirmPassword.value) return toast('Konfirmasi kata sandi tidak sama.', 'warning');
-    const button = form.querySelector('[type=submit]');
-    setButtonLoading(button, true, 'Mengaktifkan…');
-    try {
-      await registerInitialOwner({ name:form.elements.name.value, storeName:form.elements.storeName.value, phone:form.elements.phone.value, email:form.elements.email.value, address:form.elements.address.value, password:form.elements.password.value });
-      toast('Aktivasi berhasil. Selamat datang!');
-    } catch (error) {
-      toast(`${getErrorMessage(error)} Akun yang sempat dibuat tidak akan dihapus; gunakan halaman Masuk untuk melanjutkan aktivasi.`, 'error', 7500);
-      setButtonLoading(button, false);
-    }
-  });
-}
-
-function renderProfileRecovery(user, profile = null) {
-  const existingName = profile?.name || '';
-  const heading = profile ? 'Selesaikan Pengaturan Toko' : 'Selesaikan Aktivasi Pemilik';
-  const description = profile
-    ? 'Profil Pemilik sudah ada, tetapi konfigurasi toko belum selesai. Lengkapi data berikut untuk masuk ke dashboard.'
-    : 'Akun login sudah terbentuk, tetapi profil toko belum selesai dibuat. Lengkapi data berikut tanpa membuat akun baru.';
-
-  appRoot.innerHTML = `<main class="splash-screen"><section class="auth-card" style="color:var(--ink);max-width:620px;width:min(92vw,620px)"><div style="text-align:center"><div class="brand-mark brand-mark--large" style="margin:auto">TH</div><h2 style="font-family:Manrope;margin:22px 0 8px">${heading}</h2><p style="color:var(--muted);line-height:1.7">${description}</p></div><form id="recovery-form" style="margin-top:20px"><div class="form-grid"><div class="field field--full"><label>Email Login</label><input value="${escapeHTML(user?.email || '')}" readonly></div><div class="field field--full"><label>Nama Pemilik *</label><input name="name" required value="${escapeHTML(existingName)}"></div><div class="field field--full"><label>Nama Toko *</label><input name="storeName" required value="Toko Emas Hidayah"></div><div class="field"><label>Telepon</label><input name="phone" value="${escapeHTML(profile?.phone || '')}"></div><div class="field field--full"><label>Alamat Toko</label><textarea name="address"></textarea></div></div><button class="button button--gold button--block" type="submit" style="margin-top:18px">Selesaikan Aktivasi</button><button class="button button--dark button--block" type="button" id="recovery-logout" style="margin-top:10px">Keluar dari Akun</button></form><div class="auth-note" style="margin-top:16px">Apabila toko sudah aktif dan akun ini adalah akun staf, minta Pemilik atau Administrator mendaftarkan akun melalui menu Pengguna.</div></section></main>`;
-
-  const form = appRoot.querySelector('#recovery-form');
-  form.addEventListener('submit', async event => {
-    event.preventDefault();
-    const button = form.querySelector('[type=submit]');
-    setButtonLoading(button, true, 'Menyelesaikan…');
-    try {
-      await completeInitialOwnerProfile({
-        name: form.elements.name.value,
-        storeName: form.elements.storeName.value,
-        phone: form.elements.phone.value,
-        address: form.elements.address.value
-      });
-      toast('Aktivasi berhasil. Memuat dashboard…');
-      window.setTimeout(() => location.reload(), 600);
-    } catch (activationError) {
-      toast(getErrorMessage(activationError), 'error', 7000);
-      setButtonLoading(button, false);
-    }
-  });
-
-  appRoot.querySelector('#recovery-logout').addEventListener('click', logout);
 }
 
 function renderAccessIssue(message) {

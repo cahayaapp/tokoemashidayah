@@ -1,4 +1,4 @@
-import { escapeHTML } from './utils.js?v=2.1.2';
+import { escapeHTML } from './utils.js?v=2.1.3';
 
 export function toast(message, type = 'success', duration = 3200) {
   const root = document.getElementById('toast-root');

@@ -3,7 +3,8 @@
 - [ ] Email/Password Authentication telah aktif.
 - [ ] Firestore telah dibuat dalam Production mode.
 - [ ] `firestore.rules` dan `firestore.indexes.json` telah terpasang.
-- [ ] Pemilik pertama berhasil dibuat melalui Aktivasi Awal.
+- [ ] Akun Pemilik yang sudah aktif berhasil login dari `tokoemashidayah.online`.
+- [ ] Pemilik dapat membuat akun Administrator/Kasir/Auditor dari menu Pengguna tanpa sesi Pemilik keluar.
 - [ ] Akun Kasir hanya melihat menu yang diizinkan.
 - [ ] Produk harga tetap menghasilkan subtotal yang benar.
 - [ ] Produk harga per gram mengikuti kadar dan ongkos.

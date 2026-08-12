@@ -1,25 +1,13 @@
-TOKO EMAS HIDAYAH v2.1.2
-GITHUB PAGES + FIREBASE FIRESTORE
+TOKO EMAS HIDAYAH v2.1.3
 
-FOTO PRODUK SEKARANG DISIMPAN LANGSUNG DI FIRESTORE.
-CLOUD STORAGE TIDAK DIPERLUKAN.
-
-1. Buka Terminal pada folder paket v2.1.2.
-2. Jalankan:
+1. Upload/replace paket ini ke repository GitHub.
+2. Pastikan GitHub Pages = main /docs.
+3. Pastikan custom domain = tokoemashidayah.online.
+4. Deploy rules:
    npx firebase-tools@latest use tokoemas-79e07
    npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes
+5. Buka tokoemashidayah.online dan login.
 
-3. Upload/replace paket terbaru di repository GitHub.
-4. GitHub Pages tetap: main /docs.
-5. Buka web dengan ?v=210 agar cache lama tidak dipakai.
-6. Login sebagai Pemilik/Admin.
-7. Produk & Stok > Tambah/Edit Produk > pilih foto > Simpan.
-8. Cek Firestore: koleksi productImages akan muncul otomatis.
-
-JANGAN DEPLOY FIREBASE HOSTING.
-JANGAN DEPLOY CLOUD STORAGE.
-Nama toko: Toko Emas Hidayah.
-
-PERUBAHAN v2.1.2
-- Upload foto mobile kini memiliki tombol Pilih dari Galeri dan Ambil Foto secara terpisah.
-- Pilih dari Galeri tidak memakai atribut capture, sehingga tidak memaksa kamera HP.
+Aktivasi Awal sudah dihapus.
+Tambah pengguna: Pengguna > Tambah Pengguna.
+Akun baru dibuat tanpa mengeluarkan sesi Pemilik.

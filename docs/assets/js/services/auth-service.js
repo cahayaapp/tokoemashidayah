@@ -1,29 +1,28 @@
-import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.2';
-import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.2';
-import { state } from '../core/state.js?v=2.1.2';
-import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.2';
-import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js';
+import { firebaseConfig, auth, db } from '../config/firebase.js?v=2.1.3';
+import { DEFAULT_GOLD_RATES } from '../core/constants.js?v=2.1.3';
+import { state } from '../core/state.js?v=2.1.3';
+import { getStoreSettings, getGoldRates } from './data-service.js?v=2.1.3';
 import {
-  getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut as firebaseSignOut,
-  onAuthStateChanged, deleteUser, updatePassword, reauthenticateWithCredential, EmailAuthProvider
+  signInWithEmailAndPassword, signOut as firebaseSignOut,
+  onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
 import {
   doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs, query, orderBy
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js';
 
-let bootstrapInProgress = false;
 let sessionSequence = 0;
 const wait = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
+const STAFF_ROLES = new Set(['admin', 'cashier', 'auditor']);
 
 export async function login(email, password) {
-  return signInWithEmailAndPassword(auth, email.trim(), password);
+  return signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
 }
 
 export async function logout() {
   return firebaseSignOut(auth);
 }
 
-async function readProfileWithRetry(user, attempts = 1) {
+async function readProfileWithRetry(user, attempts = 2) {
   let lastError = null;
   for (let index = 0; index < attempts; index += 1) {
     try {
@@ -48,7 +47,7 @@ export function observeSession(callback) {
     }
 
     try {
-      const profile = await readProfileWithRetry(user, bootstrapInProgress ? 30 : 2);
+      const profile = await readProfileWithRetry(user, 2);
       if (sequence !== sessionSequence) return;
 
       if (!profile) {
@@ -80,160 +79,96 @@ export function observeSession(callback) {
   });
 }
 
-function ownerProfilePayload(user, { name, phone = '' }) {
-  return {
-    name: name.trim(),
-    email: user.email || '',
-    role: 'owner',
-    active: true,
-    phone: phone.trim(),
-    updatedAt: serverTimestamp()
+function makeAuthError(rawMessage = '') {
+  const raw = String(rawMessage || '').trim();
+  const key = raw.split(' : ')[0].trim();
+  const mapping = {
+    EMAIL_EXISTS: ['auth/email-already-in-use', 'Email sudah terdaftar di Firebase Authentication. Jika ini sisa percobaan lama, hapus akun tersebut di Firebase Authentication → Users lalu coba lagi.'],
+    OPERATION_NOT_ALLOWED: ['auth/operation-not-allowed', 'Login Email/Kata Sandi belum diaktifkan di Firebase Authentication.'],
+    TOO_MANY_ATTEMPTS_TRY_LATER: ['auth/too-many-requests', 'Terlalu banyak percobaan. Coba lagi beberapa saat.'],
+    WEAK_PASSWORD: ['auth/weak-password', 'Kata sandi minimal 6 karakter.'],
+    PASSWORD_DOES_NOT_MEET_REQUIREMENTS: ['auth/weak-password', 'Kata sandi belum memenuhi kebijakan keamanan Firebase. Gunakan kata sandi yang lebih kuat.'],
+    INVALID_EMAIL: ['auth/invalid-email', 'Format email tidak valid.'],
+    PROJECT_NUMBER_MISMATCH: ['auth/configuration-not-found', 'Konfigurasi Firebase Authentication tidak cocok dengan project aplikasi.']
   };
+  const [code, message] = mapping[key] || ['auth/account-creation-failed', raw || 'Akun pengguna gagal dibuat di Firebase Authentication.'];
+  const error = new Error(message);
+  error.code = code;
+  return error;
 }
 
-function storePayload(user, { storeName, phone = '', address = '' }) {
-  return {
-    ownerUid: user.uid,
-    name: storeName.trim() || 'Toko Emas Hidayah',
-    tagline: 'Terpercaya • Transparan • Berkah',
-    phone: phone.trim(),
-    whatsapp: phone.trim(),
-    address: address.trim(),
-    city: '',
-    receiptFooter: 'Terima kasih atas kepercayaan Anda.',
-    lowStockDefault: 2,
-    taxPercent: 0,
-    updatedAt: serverTimestamp()
-  };
-}
-
-async function ensureInitialOwnerData({ user, name, storeName, phone = '', address = '' }) {
-  if (!user) throw new Error('Sesi akun tidak ditemukan. Silakan masuk kembali.');
-  if (!name?.trim()) throw new Error('Nama pemilik wajib diisi.');
-  if (!storeName?.trim()) throw new Error('Nama toko wajib diisi.');
-
-  const userRef = doc(db, 'users', user.uid);
-  const profileSnapshot = await getDoc(userRef);
-
-  if (!profileSnapshot.exists()) {
-    await setDoc(userRef, {
-      ...ownerProfilePayload(user, { name, phone }),
-      createdAt: serverTimestamp()
-    });
-  } else {
-    const existingProfile = profileSnapshot.data();
-    if (existingProfile.role !== 'owner') {
-      throw new Error('Akun ini bukan akun Pemilik. Hubungi Pemilik atau Administrator toko.');
-    }
-    await setDoc(userRef, ownerProfilePayload(user, { name, phone }), { merge: true });
-  }
-
-  const storeRef = doc(db, 'settings', 'store');
-  const storeSnapshot = await getDoc(storeRef);
-  if (!storeSnapshot.exists()) {
-    await setDoc(storeRef, {
-      ...storePayload(user, { storeName, phone, address }),
-      createdAt: serverTimestamp()
-    });
-  } else if (storeSnapshot.data().ownerUid !== user.uid) {
-    throw new Error('Toko sudah diaktifkan oleh akun Pemilik lain.');
-  } else {
-    await setDoc(storeRef, storePayload(user, { storeName, phone, address }), { merge: true });
-  }
-
-  const pricesRef = doc(db, 'settings', 'goldPrices');
-  const pricesSnapshot = await getDoc(pricesRef);
-  if (!pricesSnapshot.exists()) {
-    await setDoc(pricesRef, {
-      ownerUid: user.uid,
-      rates: DEFAULT_GOLD_RATES,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      updatedBy: user.uid
-    });
-  }
-
-  await addDoc(collection(db, 'auditLogs'), {
-    actorUid: user.uid,
-    actorName: name.trim(),
-    action: 'BOOTSTRAP',
-    entity: 'system',
-    entityId: 'initial',
-    detail: 'Aktivasi awal Toko Emas Hidayah',
-    createdAt: serverTimestamp()
-  }).catch(() => {});
-}
-
-export async function registerInitialOwner({ name, email, password, storeName, phone, address }) {
-  bootstrapInProgress = true;
-  let credential = null;
-  try {
-    credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-    await ensureInitialOwnerData({
-      user: credential.user,
-      name,
-      storeName,
-      phone,
-      address
-    });
-    return credential.user;
-  } catch (error) {
-    // Akun sengaja tidak dihapus. Bila penulisan Firestore terhenti,
-    // pengguna dapat masuk kembali dan menyelesaikan aktivasi dari layar pemulihan.
-    throw error;
-  } finally {
-    bootstrapInProgress = false;
-  }
-}
-
-export async function completeInitialOwnerProfile({ name, storeName, phone = '', address = '' }) {
-  const user = auth.currentUser;
-  if (!user) throw new Error('Sesi akun telah berakhir. Silakan masuk kembali.');
-  bootstrapInProgress = true;
-  try {
-    await ensureInitialOwnerData({ user, name, storeName, phone, address });
-    return user;
-  } finally {
-    bootstrapInProgress = false;
-  }
+async function authRestRequest(action, payload) {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:${action}?key=${encodeURIComponent(firebaseConfig.apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw makeAuthError(data?.error?.message || `HTTP_${response.status}`);
+  return data;
 }
 
 export async function createStaffAccount({ name, email, password, role, phone = '' }) {
-  const secondaryApp = initializeApp(
-    firebaseConfig,
-    `staff-${Date.now()}-${Math.random().toString(36).slice(2)}`
-  );
-  const secondaryAuth = getAuth(secondaryApp);
-  let credential;
+  if (!state.user || !['owner', 'admin'].includes(state.profile?.role)) {
+    const error = new Error('Hanya Pemilik atau Administrator yang dapat menambah pengguna.');
+    error.code = 'permission-denied';
+    throw error;
+  }
 
+  const cleanName = String(name || '').trim();
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const cleanPhone = String(phone || '').trim();
+  if (!cleanName) throw new Error('Nama pengguna wajib diisi.');
+  if (!cleanEmail) throw new Error('Email pengguna wajib diisi.');
+  if (!STAFF_ROLES.has(role)) throw new Error('Peran pengguna tidak valid.');
+  if (String(password || '').length < 6) {
+    const error = new Error('Kata sandi minimal 6 karakter.');
+    error.code = 'auth/weak-password';
+    throw error;
+  }
+
+  let authAccount = null;
   try {
-    credential = await createUserWithEmailAndPassword(secondaryAuth, email.trim(), password);
-    await setDoc(doc(db, 'users', credential.user.uid), {
-      name,
-      email: email.trim(),
+    // Buat akun Auth lewat REST agar sesi Pemilik/Administrator yang sedang login
+    // tidak pernah berpindah ke akun staf yang baru dibuat.
+    authAccount = await authRestRequest('signUp', {
+      email: cleanEmail,
+      password,
+      returnSecureToken: true
+    });
+
+    const userId = authAccount.localId;
+    if (!userId) throw new Error('Firebase tidak mengembalikan UID pengguna baru.');
+
+    await setDoc(doc(db, 'users', userId), {
+      name: cleanName,
+      email: cleanEmail,
       role,
-      phone,
+      phone: cleanPhone,
       active: true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       createdBy: state.user.uid
     });
+
     await addDoc(collection(db, 'auditLogs'), {
       actorUid: state.user.uid,
       actorName: state.profile?.name || state.user.email,
       action: 'CREATE',
       entity: 'user',
-      entityId: credential.user.uid,
-      detail: `${name} • ${role}`,
+      entityId: userId,
+      detail: `${cleanName} • ${role}`,
       createdAt: serverTimestamp()
-    });
-    return credential.user.uid;
+    }).catch(() => {});
+
+    return userId;
   } catch (error) {
-    if (credential?.user) await deleteUser(credential.user).catch(() => {});
+    // Bila akun Auth sudah terbentuk tetapi profil Firestore gagal dibuat,
+    // hapus kembali akun Auth agar tidak meninggalkan akun yatim.
+    if (authAccount?.idToken) {
+      await authRestRequest('delete', { idToken: authAccount.idToken }).catch(() => {});
+    }
     throw error;
-  } finally {
-    await firebaseSignOut(secondaryAuth).catch(() => {});
-    await deleteApp(secondaryApp).catch(() => {});
   }
 }
 
@@ -243,11 +178,27 @@ export async function listUsers() {
 }
 
 export async function updateUserProfile(userId, data) {
-  await setDoc(doc(db, 'users', userId), {
-    ...data,
+  const current = await getDoc(doc(db, 'users', userId));
+  if (!current.exists()) throw new Error('Profil pengguna tidak ditemukan.');
+  const currentData = current.data();
+
+  const payload = {
+    name: String(data.name || '').trim(),
+    phone: String(data.phone || '').trim(),
     updatedAt: serverTimestamp(),
     updatedBy: state.user.uid
-  }, { merge: true });
+  };
+
+  // Peran Pemilik dikunci agar akun utama tidak dapat terdemote tanpa sengaja.
+  if (currentData.role === 'owner') {
+    payload.role = 'owner';
+    payload.active = true;
+  } else {
+    payload.role = STAFF_ROLES.has(data.role) ? data.role : currentData.role;
+    payload.active = data.active !== false;
+  }
+
+  await setDoc(doc(db, 'users', userId), payload, { merge: true });
 
   await addDoc(collection(db, 'auditLogs'), {
     actorUid: state.user.uid,
@@ -255,9 +206,9 @@ export async function updateUserProfile(userId, data) {
     action: 'UPDATE',
     entity: 'user',
     entityId: userId,
-    detail: `${data.name || ''} • ${data.role || ''} • ${data.active === false ? 'nonaktif' : 'aktif'}`,
+    detail: `${payload.name || ''} • ${payload.role || ''} • ${payload.active === false ? 'nonaktif' : 'aktif'}`,
     createdAt: serverTimestamp()
-  });
+  }).catch(() => {});
 }
 
 export async function changeOwnPassword(currentPassword, newPassword) {

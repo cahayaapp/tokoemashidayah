@@ -1,79 +1,56 @@
 # Toko Emas Hidayah — GitHub Pages + Firebase
 
-Versi: 2.1.2
+Versi: **2.1.3**
 
-Paket ini memakai:
+Paket produksi untuk toko yang **sudah aktif**.
 
-- GitHub Pages untuk menayangkan kode web app.
-- Firebase Authentication untuk login.
-- Cloud Firestore untuk seluruh data toko.
-- Foto produk juga disimpan di Cloud Firestore setelah dikompresi otomatis.
-- Firebase Hosting dan Cloud Storage tidak dipakai.
+- Web app: GitHub Pages / custom domain `tokoemashidayah.online`
+- Login: Firebase Authentication (Email/Password)
+- Data: Cloud Firestore
+- Foto produk: Cloud Firestore (`productImages`), terkompresi JPEG
+- Firebase Hosting dan Cloud Storage tidak diperlukan
 
-## Perubahan utama v2.1.2
+## Perubahan v2.1.3
 
-Fitur foto produk dirombak total. Versi lama mencoba mengunggah foto ke Cloud Storage. Karena project Firebase pada paket Spark tidak dapat memakai Cloud Storage, foto gagal tersimpan. Versi 2.1.2 tidak bergantung pada Cloud Storage lagi.
+1. Menu **Aktivasi Awal dihapus total** dari halaman login.
+2. Akun tanpa profil Firestore tidak lagi diarahkan ke aktivasi owner; akses ditolak dan harus didaftarkan oleh Pemilik/Administrator.
+3. **Tambah Pengguna diperbaiki.** Akun staf dibuat melalui Firebase Auth REST API sehingga sesi Pemilik/Administrator tidak berpindah ke akun baru.
+4. Bila pembuatan profil Firestore gagal setelah akun Auth terbentuk, aplikasi mencoba menghapus kembali akun Auth tersebut agar tidak meninggalkan akun yatim.
+5. Profil Pemilik dikunci agar tidak dapat terdemote atau dinonaktifkan tanpa sengaja.
+6. File `docs/CNAME` sudah berisi `tokoemashidayah.online` agar custom domain tidak hilang ketika paket diunggah ulang.
 
-Saat Pemilik/Administrator memilih foto:
+## Update GitHub
 
-1. Browser mengecilkan dan mengompresi foto menjadi JPEG.
-2. Hasil kompresi dibatasi sekitar 420 KB.
-3. Foto disimpan pada koleksi `productImages` di Cloud Firestore.
-4. Dokumen foto memakai ID yang sama dengan ID produk.
-5. Foto otomatis dibaca kembali pada Produk & Stok dan halaman Kasir.
-6. Menghapus produk ikut menghapus foto Firebase-nya.
-7. Pada Edit Produk tersedia opsi untuk mengganti atau menghapus foto.
+Upload/replace seluruh isi paket ke repository. GitHub Pages tetap memakai:
 
-## Struktur Firebase foto
+- Branch: `main`
+- Folder: `/docs`
+- Custom domain: `tokoemashidayah.online`
 
-- `products/{productId}` — data produk dan stok.
-- `productImages/{productId}` — foto terkompresi dan metadata foto.
+## WAJIB: deploy Firestore Rules baru
 
-Field foto utama: `dataUrl`, `mimeType`, `sizeBytes`, `width`, `height`, `updatedAt`, `updatedBy`.
-
-## Pasang rules dan indeks Firebase v2.1.2
-
-Buka Terminal pada folder paket ini, lalu jalankan:
+Dari folder paket ini jalankan:
 
 ```bash
 npx firebase-tools@latest use tokoemas-79e07
 npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes
 ```
 
-Jangan menambahkan `hosting` atau `storage`.
+Jangan tambahkan `hosting` atau `storage`.
 
-## Upload aplikasi ke GitHub
+## Menambah pengguna
 
-Upload/replace isi paket ini pada repository Toko Emas Hidayah. Folder `docs` harus tetap bernama `docs`.
+Masuk sebagai Pemilik/Administrator → **Pengguna → Tambah Pengguna** → isi nama, email, kata sandi awal, peran, telepon → **Buat Pengguna**.
 
-GitHub repository:
+Peran yang dapat dibuat:
+- Administrator
+- Kasir
+- Auditor
 
-- Settings → Pages
-- Source: Deploy from a branch
-- Branch: `main`
-- Folder: `/docs`
+Pengguna baru dapat langsung masuk menggunakan email dan kata sandi yang dibuat.
 
-Setelah GitHub Pages selesai membangun ulang, lakukan hard refresh atau buka URL dengan query versi baru, misalnya `?v=210`.
+## Firebase Authentication
 
-## Pengujian foto
+Pastikan Email/Password aktif dan domain berikut ada di Authorized domains:
 
-1. Login sebagai Pemilik atau Administrator.
-2. Buka Produk & Stok.
-3. Klik Tambah Produk atau Edit.
-4. Pilih foto dari laptop/HP.
-5. Preview harus langsung tampil.
-6. Klik Simpan Produk.
-7. Setelah daftar produk dimuat ulang, foto harus tetap tampil.
-8. Di Firebase Console → Firestore Database → Data harus muncul koleksi `productImages`.
-
-## Catatan kapasitas
-
-Cloud Firestore membatasi ukuran satu dokumen sekitar 1 MiB. Karena itu aplikasi mengompresi setiap foto secara otomatis dan rules menolak foto hasil kompresi yang terlalu besar. Foto produk sebaiknya berupa satu objek perhiasan dengan crop yang cukup dekat agar tetap tajam tetapi hemat data.
-
-
-## Perbaikan v2.1.2 — Kasir & Stok
-- Pemilihan produk stok 1 item tidak lagi membingungkan: produk pertama masuk ke keranjang dan notifikasi sukses tampil.
-- Klik ulang produk yang stoknya sudah maksimum menampilkan penjelasan bahwa produk sudah ada di keranjang.
-- Produk satuan gram divalidasi berdasarkan berat stok, bukan jumlah item.
-- Transaksi satuan gram mengurangi berat stok secara benar.
-- Validasi stok item dan berat dibuat konsisten antara POS dan transaksi Firestore.
+`tokoemashidayah.online`

@@ -9,10 +9,6 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(uid);
     }
 
-    function storePath() {
-      return /databases/$(database)/documents/settings/store;
-    }
-
     function hasOwnProfile() {
       return signedIn() && exists(profilePath(request.auth.uid));
     }
@@ -46,19 +42,12 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      // Aktivasi pertama dibuat bertahap. Pengguna pertama hanya boleh
-      // membuat profil owner miliknya sendiri selama toko belum terbentuk.
-      allow create: if (
-        signedIn()
-        && uid == request.auth.uid
-        && !exists(storePath())
-        && request.resource.data.role == 'owner'
-        && request.resource.data.active == true
-        && request.resource.data.email == request.auth.token.email
-      ) || (
-        manager()
+      // Toko sudah aktif. Tidak ada lagi bootstrap/aktivasi owner dari halaman publik.
+      // Akun staf hanya boleh dibuat profilnya oleh Pemilik/Administrator.
+      allow create: if manager()
         && request.resource.data.role in ['admin', 'cashier', 'auditor']
-      );
+        && request.resource.data.active == true
+        && request.resource.data.createdBy == request.auth.uid;
 
       allow read: if signedIn() && (
         uid == request.auth.uid
@@ -66,27 +55,24 @@ service cloud.firestore {
         || roleIs(['auditor'])
       );
 
-      allow update: if manager()
-        && (request.resource.data.role != 'owner' || owner())
-        && (resource.data.role != 'owner' || owner());
+      // Profil owner dikunci sebagai owner dan selalu aktif.
+      allow update: if manager() && (
+        (resource.data.role == 'owner'
+          && owner()
+          && uid == request.auth.uid
+          && request.resource.data.role == 'owner'
+          && request.resource.data.active == true)
+        ||
+        (resource.data.role != 'owner'
+          && request.resource.data.role in ['admin', 'cashier', 'auditor'])
+      );
 
-      allow delete: if owner() && uid != request.auth.uid;
+      allow delete: if owner() && resource.data.role != 'owner';
     }
 
     match /settings/{settingId} {
-      allow create: if (
-        settingId == 'store'
-        && owner()
-        && !exists(storePath())
-        && request.resource.data.ownerUid == request.auth.uid
-      ) || (
-        settingId == 'goldPrices'
-        && owner()
-        && request.resource.data.ownerUid == request.auth.uid
-      );
-
       allow read: if activeUser();
-      allow update, delete: if manager();
+      allow create, update, delete: if manager();
     }
 
     match /products/{productId} {
@@ -98,8 +84,6 @@ service cloud.firestore {
           .hasOnly(['stockQty', 'stockWeightGrams', 'updatedAt', 'updatedBy'])
       );
     }
-
-
 
     // Foto produk disimpan sebagai JPEG terkompresi pada dokumen terpisah
     // agar aplikasi tetap memakai Firebase tanpa membutuhkan Cloud Storage.

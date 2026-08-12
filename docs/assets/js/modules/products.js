@@ -1,8 +1,8 @@
-import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.2';
-import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.2';
-import { canManage } from '../core/state.js?v=2.1.2';
-import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.2';
-import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.2';
+import { listProducts, saveProduct, removeProduct } from '../services/data-service.js?v=2.1.3';
+import { PRODUCT_CATEGORIES, KARATS } from '../core/constants.js?v=2.1.3';
+import { canManage } from '../core/state.js?v=2.1.3';
+import { formatRupiah, formatNumber, normalizeText, compressImageForFirestore, downloadCSV, getErrorMessage, escapeHTML } from '../core/utils.js?v=2.1.3';
+import { pageLoading, tableEmpty, badge, openModal, closeModal, confirmDialog, toast, setButtonLoading, attachCurrencyInput, getCurrencyValue } from '../core/ui.js?v=2.1.3';
 
 let products = [];
 let filtered = [];
